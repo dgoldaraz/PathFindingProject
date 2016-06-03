@@ -7,12 +7,17 @@ public class UnitScript : MonoBehaviour {
 
 	public enum UnitType { Wall, Goal, Start, Floor }
 
-	public Color selectedColour;
+	public Color overColour;
+	public Color selectionColor;
 	public Color wallColor = Color.blue;
 	public Color goalColor = Color.red;
 	public Color startColor = Color.green;
 
 
+
+	private bool m_selected;
+	private int xPos{ get; set; }
+	private int yPos{ get; set; }
 	private int m_F { get; set; }
 	private int m_H { get; set; }
 	private int m_G { get; set; }
@@ -50,19 +55,31 @@ public class UnitScript : MonoBehaviour {
 
 	void OnMouseEnter() 
 	{
-		m_currentColor = render.material.color;
-		render.material.color = selectedColour;
+		if(!m_selected)
+		{
+			m_currentColor = render.material.color;
+		}
+		render.material.color = overColour;
 	}
+
 	//Return to the default colour
 	void OnMouseExit() 
 	{
-		render.material.color = m_currentColor;
+		if(!m_selected)
+		{
+			render.material.color = m_currentColor;
+		}
+		else
+		{
+			render.material.color = selectionColor;
+		}
 	}
 	//Set Colr function
 	public void setColor( Color c )
 	{
 		render.material.color = c;
 	}
+
 	//Updates the colour depending on the type
 	void updateColour()
 	{
@@ -84,12 +101,30 @@ public class UnitScript : MonoBehaviour {
 				setColor(m_defaultColor);
 				break;
 		}
-
+		m_currentColor = render.material.color;
 	}
+
 	//Set the new type
 	public void setType(UnitType newType)
 	{
 		m_unitType = newType;
 		updateColour();
+	}
+	public UnitType getType()
+	{
+		return m_unitType;
+	}
+	//Set selected
+	public void setSelected(bool s)
+	{
+		m_selected = s;
+		if(s)
+		{
+			setColor(selectionColor);
+		}
+		else
+		{
+			setColor(m_currentColor);
+		}
 	}
 }

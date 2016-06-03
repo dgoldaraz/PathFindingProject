@@ -1,9 +1,10 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\GridCreator.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\InputManager.cs">
     <Files>
-      <File FileName="Assets\Scripts\UnitScript.cs" Line="28" Column="3" />
-      <File FileName="Assets\Scripts\GridCreator.cs" Line="10" Column="2" />
+      <File FileName="Assets\Scripts\UnitScript.cs" Line="113" Column="25" />
+      <File FileName="Assets\Scripts\GridCreator.cs" Line="6" Column="116" />
+      <File FileName="Assets\Scripts\InputManager.cs" Line="88" Column="25" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
