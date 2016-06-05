@@ -12,21 +12,21 @@ public class UnitScript : MonoBehaviour {
 	public Color wallColor = Color.blue;
 	public Color goalColor = Color.red;
 	public Color startColor = Color.green;
+	public GameObject HText;
+	public GameObject GText;
+	public GameObject FText;
+	public UnitType m_unitType = UnitType.Floor;
 
-
-
+	private Renderer render;
+	private Color m_defaultColor;
+	private Color m_currentColor;
 	private bool m_selected;
 	private int xPos{ get; set; }
 	private int yPos{ get; set; }
 	private int m_F { get; set; }
 	private int m_H { get; set; }
 	private int m_G { get; set; }
-
-	private Color m_defaultColor;
-	private Color m_currentColor;
-	public UnitType m_unitType = UnitType.Floor;
-
-	private Renderer render;
+	private bool m_showText = true;
 
 	// Use this for initialization
 	void Start () {
@@ -44,34 +44,24 @@ public class UnitScript : MonoBehaviour {
 			m_defaultColor = render.material.color;
 			updateColour();
 		}
-
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
-	
-	}
-
-	void OnMouseEnter() 
-	{
+		//Do a raycast with the collider and the camera position to decide the clour
 		if(!m_selected)
 		{
-			m_currentColor = render.material.color;
-		}
-		render.material.color = overColour;
-	}
-
-	//Return to the default colour
-	void OnMouseExit() 
-	{
-		if(!m_selected)
-		{
-			render.material.color = m_currentColor;
-		}
-		else
-		{
-			render.material.color = selectionColor;
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit hitInfo;
+			if(collider.Raycast(ray,out hitInfo,Mathf.Infinity))
+			{
+				render.material.color = overColour;
+			}
+			else
+			{
+				render.material.color = m_currentColor;
+			}
 		}
 	}
 	//Set Colr function
@@ -102,6 +92,10 @@ public class UnitScript : MonoBehaviour {
 				break;
 		}
 		m_currentColor = render.material.color;
+		if(m_selected)
+		{
+			setColor(selectionColor);
+		}
 	}
 
 	//Set the new type
@@ -127,4 +121,13 @@ public class UnitScript : MonoBehaviour {
 			setColor(m_currentColor);
 		}
 	}
+
+	public void showText(bool s)
+	{
+		m_showText = s;
+		HText.SetActive(m_showText);
+		FText.SetActive(m_showText);
+		GText.SetActive(m_showText);
+	}
+	
 }

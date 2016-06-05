@@ -11,12 +11,12 @@ public class GridCreator : MonoBehaviour {
 	public int W = 4;
 	public GameObject basicUnit;
 
-	private GameObject[,] m_units;
+	//private GameObject[,] m_units;
 
 
 	// Use this for initialization
 	void Start () {
-		m_units = new GameObject[H,W];
+		//m_units = new GameObject[H,W];
 
 	}
 	
