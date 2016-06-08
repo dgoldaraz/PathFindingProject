@@ -4,19 +4,34 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 
 public class InputManager : MonoBehaviour {
-
+	
 	//This class deals with the selection and the UI oof the app
+
+	public delegate void setDebugSignal();
+	public static event setDebugSignal onDebugChanged;
+
+	public delegate void runSimulationSignal(bool run);
+	public static event runSimulationSignal onRunSimulation;
+
+	public delegate void moveUnitSignal(int x, int y);
+	public static event moveUnitSignal onMoveUnit;
+
+	public delegate void setTarget(int x, int y);
+	public static event setTarget onSetTarget;
+
+
 	private List<GameObject> m_selection;
 	private InputManager instance = null;
+	private bool m_isRunning = false;
 
 	public GameObject mainCamera;
 	public Toggle goalToggle;
-	public Toggle startToggle;
 	public Toggle wallToggle;
 	public Toggle floorToggle;
+	public Button runButton;
 
 
-	//Singleton
+	//Singleton implmentation
 	void Awake () {
 		if(instance != null )
 		{
@@ -38,8 +53,48 @@ public class InputManager : MonoBehaviour {
 		deselect();
 	}
 	
-	// Update is called once per frame
+	// Update is called once per frame, check if we are running or not
+	// If we are running, the main click selects a position to go and we should start the simulation
+	// I fwe are not running, we are creating the environment, allow selection of Tiles, Unit
 	void Update () 
+	{
+		if(m_isRunning)
+		{
+			//setelct path
+			selectTarget();
+		}
+		else
+		{
+			creationSelection();
+		}
+
+	}
+
+	//Calculates the target position and send a signal
+	void selectTarget()
+	{
+		if(Input.GetMouseButtonDown(0))
+		{
+			RaycastHit hit;
+			Ray ray = mainCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+			if(Physics.Raycast(ray, out hit))
+			{
+				//If there is a hit and is a unit, select it
+				if(hit.collider.CompareTag("Tile"))
+				{
+					GameObject unitGO = hit.collider.gameObject;
+					Tile unit = unitGO.GetComponent<Tile>();
+					if(onSetTarget != null)
+					{
+						onSetTarget(unit.getX(), unit.getY ());
+					}
+				}
+			}
+		}
+	}
+	// Call when we are going to change the environment 
+	// Allow to select a Tile or Move the Unit
+	void creationSelection()
 	{
 		if(Input.GetMouseButtonDown(0))
 		{
@@ -47,33 +102,43 @@ public class InputManager : MonoBehaviour {
 			//TODO Allow multiselection
 			//if(!Input.GetKeyDown(KeyCode.AltGr))
 			//{
-				//Only one selection
-				//deselect ();
+			//Only one selection
+			//deselect ();
 			//}
 			selectOneObject();
 		}
 		else if(Input.GetMouseButtonDown(1))
 		{
-			//Deselct on right button
+			//Deselct on right button if we don't hit any object
+			checkMoveUnit();
 			deselect();
 		}
+		
+		if(Input.GetKeyDown(KeyCode.D))
+		{
+			if(onDebugChanged != null)
+			{
+				onDebugChanged();
+			}
+		}
 	}
-	
-	//Deselect object
+
+	//Deselect Tile
 	void deselect()
 	{
 		foreach(GameObject i in m_selection)
 		{
-			i.GetComponent<UnitScript>().setSelected(false);
+			i.GetComponent<Tile>().setSelected(false);
 		}
 		m_selection.Clear();
 
 		goalToggle.gameObject.SetActive(false);
-		startToggle.gameObject.SetActive(false);
 		wallToggle.gameObject.SetActive(false);
 		floorToggle.gameObject.SetActive(false);
 	}
-	//Select an object (and deselct if there is another)
+
+	//Select an Tile (and deselct if there is another)
+	//Updates the Toggles with the types of the Tile selected (if any)
 	void selectOneObject()
 	{
 		RaycastHit hit;
@@ -81,33 +146,29 @@ public class InputManager : MonoBehaviour {
 		if(Physics.Raycast(ray, out hit))
 		{
 			//If there is a hit and is a unit, select it
-			if(hit.collider.CompareTag("Unit"))
+			if(hit.collider.CompareTag("Tile"))
 			{
 				//Deselect current object
 				deselect ();
 				GameObject unitGO = hit.collider.gameObject;
-				UnitScript unit = unitGO.GetComponent<UnitScript>();
+				Tile unit = unitGO.GetComponent<Tile>();
 				if(unit)
 				{
 					m_selection.Add (unitGO);
 					unit.setSelected(true);
 					goalToggle.gameObject.SetActive(true);
-					startToggle.gameObject.SetActive(true);
 					wallToggle.gameObject.SetActive(true);
 					floorToggle.gameObject.SetActive(true);
-					UnitScript.UnitType type = unit.getType();
+					Tile.TileType type = unit.getType();
 					switch(type)
 					{
-						case UnitScript.UnitType.Goal:
+						case Tile.TileType.Goal:
 						goalToggle.isOn = true;
 						break;
-						case UnitScript.UnitType.Start:
-						startToggle.isOn = true;
-						break;
-						case UnitScript.UnitType.Wall:
+						case Tile.TileType.Wall:
 						wallToggle.isOn = true;
 						break;
-						case UnitScript.UnitType.Floor:
+						case Tile.TileType.Floor:
 						floorToggle.isOn = true;
 						break;
 						default:
@@ -117,31 +178,29 @@ public class InputManager : MonoBehaviour {
 			}
 		}
 	}
-	//Call when the toggle Wall changes
+
+	//Call when the toggle changes depending on type
 	public void toggleChanged(string type)
 	{
 		if(m_selection.Count > 0)
 		{
 			if(type == "Wall")
 			{
-				setToggleOn(wallToggle, UnitScript.UnitType.Wall);
-			}
-			else if(type == "Start")
-			{
-				setToggleOn(startToggle, UnitScript.UnitType.Start);
+				setToggleOn(wallToggle, Tile.TileType.Wall);
 			}
 			else if(type == "Goal")
 			{
-				setToggleOn(goalToggle, UnitScript.UnitType.Goal);
+				setToggleOn(goalToggle, Tile.TileType.Goal);
 			}
 			else if(type == "Floor")
 			{
-				setToggleOn(floorToggle, UnitScript.UnitType.Floor);
+				setToggleOn(floorToggle, Tile.TileType.Floor);
 			}
 		}
 	}
 
-	public void setToggleOn(Toggle toggle, UnitScript.UnitType type)
+	//Updates the selected Tile with the toggle type
+    void setToggleOn(Toggle toggle, Tile.TileType type)
 	{
 		if(toggle.gameObject.activeSelf)
 		{
@@ -149,10 +208,60 @@ public class InputManager : MonoBehaviour {
 			{
 				foreach (GameObject g in m_selection)
 				{
-					g.GetComponent<UnitScript>().setType(type);
+					g.GetComponent<Tile>().setType(type);
 				}
 			}
 		}
 	}
 
+	//Deals with the Run button simulation
+	public void buttonPressed()
+	{
+		//Get text to know the state
+		if(runButton.GetComponentInChildren<Text>().text == "RUN")
+		{
+			deselect();
+			//We are running!
+			m_isRunning = true;
+			//sent signal to run
+			if(onRunSimulation != null)
+			{
+				onRunSimulation(true);
+			}
+			runButton.GetComponentInChildren<Text>().text = "STOP";
+		}
+		else
+		{
+			m_isRunning = false;
+			//Stop the simulation
+			if(onRunSimulation != null)
+			{
+				onRunSimulation(false);
+			}
+			runButton.GetComponentInChildren<Text>().text = "RUN";
+		}
+	}
+
+	//Checks the user wants to move the Unit to a specific position
+	void checkMoveUnit()
+	{
+		RaycastHit hit;
+		Ray ray = mainCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+		if(Physics.Raycast(ray, out hit))
+		{
+			//If there is a hit and is a unit, select it
+			if(hit.collider.CompareTag("Tile"))
+			{
+				//Move Unit to this Tile
+				if(onMoveUnit != null)
+				{
+					GameObject unitGO = hit.collider.gameObject;
+					Tile unit = unitGO.GetComponent<Tile>();
+
+					onMoveUnit(unit.getX(), unit.getY());
+				}
+			}
+		}
+	}
+	
 }

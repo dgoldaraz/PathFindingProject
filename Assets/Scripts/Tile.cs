@@ -1,39 +1,43 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class UnitScript : MonoBehaviour {
+public class Tile : MonoBehaviour {
 
 	//This class is the basic unit in the grid. It can be of different types and will store different values used for the pathfinding
 
-	public enum UnitType { Wall, Goal, Start, Floor }
+	public enum TileType { Wall, Goal, Floor }
 
 	public Color overColour;
 	public Color selectionColor;
 	public Color wallColor = Color.blue;
 	public Color goalColor = Color.red;
-	public Color startColor = Color.green;
-	public GameObject HText;
-	public GameObject GText;
-	public GameObject FText;
-	public UnitType m_unitType = UnitType.Floor;
+	public GameObject FLabel;
+	public GameObject SLabel;
+	public GameObject TLabel;
+	public TileType m_unitType = TileType.Floor;
 
 	private Renderer render;
 	private Color m_defaultColor;
 	private Color m_currentColor;
 	private bool m_selected;
-	private int xPos{ get; set; }
-	private int yPos{ get; set; }
-	private int m_F { get; set; }
-	private int m_H { get; set; }
-	private int m_G { get; set; }
+	private int m_xPos;
+	private int m_yPos;
+
+	/*
+	private int m_F;
+	private int m_H;
+	private int m_G;
+	*/
+
 	private bool m_showText = true;
 
 	// Use this for initialization
 	void Start () {
-
+		/*
 		m_F = 0;
 		m_H = 0;
 		m_G = 0;
+		*/
 		render = GetComponent<Renderer>();
 		if(!render)
 		{
@@ -44,6 +48,7 @@ public class UnitScript : MonoBehaviour {
 			m_defaultColor = render.material.color;
 			updateColour();
 		}
+		showText(false);
 	}
 	
 	// Update is called once per frame
@@ -64,6 +69,7 @@ public class UnitScript : MonoBehaviour {
 			}
 		}
 	}
+
 	//Set Colr function
 	public void setColor( Color c )
 	{
@@ -75,16 +81,13 @@ public class UnitScript : MonoBehaviour {
 	{
 		switch(m_unitType)
 		{
-			case UnitType.Floor:
+			case TileType.Floor:
 				setColor( m_defaultColor);
 				break;
-			case UnitType.Goal:
+			case TileType.Goal:
 				setColor(goalColor);
 				break;
-			case UnitType.Start:
-				setColor(startColor);
-				break;
-			case UnitType.Wall:
+			case TileType.Wall:
 				setColor(wallColor);
 				break;
 			default:
@@ -99,15 +102,12 @@ public class UnitScript : MonoBehaviour {
 	}
 
 	//Set the new type
-	public void setType(UnitType newType)
+	public void setType(TileType newType)
 	{
 		m_unitType = newType;
 		updateColour();
 	}
-	public UnitType getType()
-	{
-		return m_unitType;
-	}
+	
 	//Set selected
 	public void setSelected(bool s)
 	{
@@ -122,12 +122,35 @@ public class UnitScript : MonoBehaviour {
 		}
 	}
 
+	//Shows the text over the Tile
 	public void showText(bool s)
 	{
 		m_showText = s;
-		HText.SetActive(m_showText);
-		FText.SetActive(m_showText);
-		GText.SetActive(m_showText);
+		FLabel.SetActive(m_showText);
+		TLabel.SetActive(m_showText);
+		SLabel.SetActive(m_showText);
+	}
+
+	//Set/Get
+	public void setX(int x)
+	{
+		m_xPos = x;
+	}
+	public int getX()
+	{
+		return m_xPos;
+	}
+	public void setY(int y)
+	{
+		m_yPos = y;
+	}
+	public int getY()
+	{
+		return m_yPos;
+	}
+	public TileType getType()
+	{
+		return m_unitType;
 	}
 	
 }
