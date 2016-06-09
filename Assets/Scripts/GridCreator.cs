@@ -11,32 +11,36 @@ public class GridCreator : MonoBehaviour {
 	public int H = 10;
 	public int W = 10;
 	public GameObject tile;
-
-	private GameObject[,] m_tiles;
-
 	public GameObject unit;
+	public bool useDiagonals = false;
 
+	private Tile[,] m_tiles;
 	private bool m_debugMode = false;
 
+	private static Vector3 m_currentPosition;
 
 	// Use this for initialization
-	void Start () {
-		m_tiles = new GameObject[H,W];
+	void Start () 
+	{
+		m_currentPosition = this.transform.position;
+		m_tiles = new Tile[H,W];
 		Vector3 pos = this.gameObject.transform.position;
 		for(int i  = 0; i < W; ++i)
 		{
 			for(int j = 0; j < H; ++j)
 			{
 				GameObject go = Instantiate( tile, new Vector3( pos.x + i, 0, pos.z + j), Quaternion.identity) as GameObject;
-				go.GetComponent<Tile>().setX((int)pos.x + i);
-				go.GetComponent<Tile>().setY((int)pos.z + j);
-				m_tiles[i,j] = go;
+				go.GetComponent<Tile>().setX(i);
+				go.GetComponent<Tile>().setY(j);
+				m_tiles[i,j] = go.GetComponent<Tile>();
 			}
 		}
 
-		Instantiate(unit, new Vector3( pos.x, 1, pos.z), Quaternion.identity);
+		GameObject uGO = Instantiate(unit, new Vector3( pos.x, 1, pos.z), Quaternion.identity) as GameObject;
+		this.gameObject.GetComponent<PathFinding>().sourceUnit = uGO;
 
 		InputManager.onDebugChanged += setDebugMode;
+		createGraph();
 	}
 	
 	// Update is called once per frame
@@ -44,13 +48,77 @@ public class GridCreator : MonoBehaviour {
 	
 	}
 
+	public Tile[,] getTiles()
+	{
+		return m_tiles;
+	}
+
 	public void setDebugMode()
 	{
 		m_debugMode = !m_debugMode;
-		foreach( GameObject g in m_tiles)
+		foreach( Tile t in m_tiles)
 		{
-			g.GetComponent<Tile>().showText(m_debugMode);
+			t.showText(m_debugMode);
 		}
+	}
+
+	//Add all the neighbours to the tiles, also use the diagonals if neccesary
+	public void createGraph()
+	{
+		for(int i = 0; i < W; ++i)
+		{
+			for(int j = 0; j < H; ++j)
+			{
+				Tile cT = m_tiles[i,j];
+				if(i > 0 )
+				{
+					cT.addNeighbour(m_tiles[i-1,j]);
+				}
+				if(i < W - 1 )
+				{
+					cT.addNeighbour(m_tiles[i+1,j]);
+				}
+				if(j > 0 )
+				{
+					cT.addNeighbour(m_tiles[i,j-1]);
+				}
+				if(j < H - 1 )
+				{
+					cT.addNeighbour(m_tiles[i,j+1]);
+				}
+				if(useDiagonals)
+				{
+					if( i > 0 )
+					{
+						if(j > 0 )
+						{
+							cT.addNeighbour(m_tiles[i-1,j-1]);
+						}
+						if( j < H-1)
+						{
+							cT.addNeighbour(m_tiles[i-1,j+1]);
+						}
+					}
+					if( i < W-1 )
+					{
+						if(j > 0 )
+						{
+							cT.addNeighbour(m_tiles[i+1,j-1]);
+						}
+						if( j < H-1 )
+						{
+							cT.addNeighbour(m_tiles[i+1,j+1]);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//Return a vector with the Global coordinates based on the position of the grid creator
+	public static Vector3 TranslateCoordintae(int x, int y)
+	{
+		return new Vector3( x + m_currentPosition.x, 0, y + m_currentPosition.z);
 	}
 
 }

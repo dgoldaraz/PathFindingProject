@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class Tile : MonoBehaviour {
 
@@ -23,6 +23,9 @@ public class Tile : MonoBehaviour {
 	private int m_xPos;
 	private int m_yPos;
 
+	private List<Tile> m_neighbours;
+
+
 	/*
 	private int m_F;
 	private int m_H;
@@ -38,6 +41,8 @@ public class Tile : MonoBehaviour {
 		m_H = 0;
 		m_G = 0;
 		*/
+		//m_neighbours = new List<Tile>();
+
 		render = GetComponent<Renderer>();
 		if(!render)
 		{
@@ -49,6 +54,7 @@ public class Tile : MonoBehaviour {
 			updateColour();
 		}
 		showText(false);
+
 	}
 	
 	// Update is called once per frame
@@ -151,6 +157,41 @@ public class Tile : MonoBehaviour {
 	public TileType getType()
 	{
 		return m_unitType;
+	}
+
+	public void addNeighbour(Tile t)
+	{
+		if(m_neighbours == null)
+		{
+			m_neighbours = new List<Tile>();
+		}
+		if(t != null)
+		{
+			m_neighbours.Add(t);
+		}
+	}
+
+	public Tile getNeighbour(int i)
+	{
+		if( i < m_neighbours.Count)
+		{
+			return m_neighbours[i];
+		}
+		return null;
+	}
+
+	public int getNeighbourCount()
+	{
+		return m_neighbours.Count;
+	}
+
+	public float distance(Tile t)
+	{
+		if(t.getType() != TileType.Wall)
+		{
+			return Vector2.Distance( new Vector2(m_xPos, m_yPos), new Vector2(t.getX(), t.getY ())); 
+		}
+		return Mathf.Infinity;
 	}
 	
 }
