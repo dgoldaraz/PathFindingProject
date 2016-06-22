@@ -4,10 +4,13 @@ using System.Collections.Generic;
 public class Unit : MonoBehaviour {
 
 
-	private List<Tile> m_path;
+	public float speed = 0.5f;
 
+	private List<Tile> m_path;
 	private int m_xPos;
 	private int m_yPos;
+	private Vector3 m_nextPosition;
+	private bool m_moving;
 
 
 	// Use this for initialization
@@ -17,12 +20,30 @@ public class Unit : MonoBehaviour {
 		m_path = new List<Tile>();
 		m_xPos = 0;
 		m_yPos = 0;
+		m_moving = false;
 	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
 		followPath();
+		moveToNextPosition();
+	}
+	void moveToNextPosition()
+	{
+		if(m_moving)
+		{
+			//Check if we are in the right posiiton
+			if(transform.position == m_nextPosition)
+			{
+				m_moving = false;
+			}
+			else
+			{
+				//Update values and position
+				transform.position = Vector3.Lerp(transform.position, m_nextPosition, speed);
+			}
+		}
 	}
 	//Move the unit instantly to the position
 	void jumpToPosition(int x, int y )
@@ -36,16 +57,19 @@ public class Unit : MonoBehaviour {
 	//Move the unit follow the Path
 	void followPath()
 	{
-		int currNode = 0;
-
-		while( currNode < m_path.Count - 1)
+		if(!m_moving && m_path.Count > 0)
 		{
-			Vector3 start = GridCreator.TranslateCoordintae( m_path[currNode].getX(), m_path[currNode].getY());
-			Vector3 end = GridCreator.TranslateCoordintae( m_path[currNode+1].getX(), m_path[currNode+1].getY());
-			start.y = 1;
-			end.y = 1;
-			Debug.DrawLine(start, end, Color.red);
-			currNode++;
+			//int currNode = 0;
+			Tile nextTile = m_path[0];
+			m_path.RemoveAt(0);
+			Vector3 nP = GridCreator.TranslateCoordintae( nextTile.getX(), nextTile.getY());
+			
+			m_nextPosition.x = nP.x;
+			m_nextPosition.y = this.gameObject.transform.position.y;
+			m_nextPosition.z = nP.z;
+			m_moving = true;
+			m_xPos = nextTile.getX();
+			m_yPos = nextTile.getY();
 		}
 	}
 
