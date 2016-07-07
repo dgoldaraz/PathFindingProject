@@ -62,6 +62,19 @@ public class GridCreator : MonoBehaviour {
 		}
 	}
 
+	public void setUseDiagonals( bool useD)
+	{
+		for(int i = 0; i < W; ++i)
+		{
+			for(int j = 0; j < H; ++j)
+			{
+				Tile cT = m_tiles[i,j];
+				cT.setUseDiagonals(useD);
+			}
+		}
+		useDiagonals = useD;
+	}
+
 	//Add all the neighbours to the tiles, also use the diagonals if neccesary
 	public void createGraph()
 	{
@@ -70,6 +83,7 @@ public class GridCreator : MonoBehaviour {
 			for(int j = 0; j < H; ++j)
 			{
 				Tile cT = m_tiles[i,j];
+				cT.setUseDiagonals(useDiagonals);
 				if(i > 0 )
 				{
 					cT.addNeighbour(m_tiles[i-1,j]);
@@ -86,29 +100,26 @@ public class GridCreator : MonoBehaviour {
 				{
 					cT.addNeighbour(m_tiles[i,j+1]);
 				}
-				if(useDiagonals)
+				if( i > 0 )
 				{
-					if( i > 0 )
+					if(j > 0 )
 					{
-						if(j > 0 )
-						{
-							cT.addNeighbour(m_tiles[i-1,j-1]);
-						}
-						if( j < H-1)
-						{
-							cT.addNeighbour(m_tiles[i-1,j+1]);
-						}
+						cT.addDNeighbour(m_tiles[i-1,j-1]);
 					}
-					if( i < W-1 )
+					if( j < H-1)
 					{
-						if(j > 0 )
-						{
-							cT.addNeighbour(m_tiles[i+1,j-1]);
-						}
-						if( j < H-1 )
-						{
-							cT.addNeighbour(m_tiles[i+1,j+1]);
-						}
+						cT.addDNeighbour(m_tiles[i-1,j+1]);
+					}
+				}
+				if( i < W-1 )
+				{
+					if(j > 0 )
+					{
+						cT.addDNeighbour(m_tiles[i+1,j-1]);
+					}
+					if( j < H-1 )
+					{
+						cT.addDNeighbour(m_tiles[i+1,j+1]);
 					}
 				}
 			}

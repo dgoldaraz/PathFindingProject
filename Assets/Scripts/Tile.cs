@@ -5,25 +5,30 @@ public class Tile : MonoBehaviour {
 
 	//This class is the basic unit in the grid. It can be of different types and will store different values used for the pathfinding
 
-	public enum TileType { Wall, Goal, Floor }
+	public enum TileType { Wall,Floor }
 
 	public Color overColour;
 	public Color selectionColor;
 	public Color wallColor = Color.blue;
-	public Color goalColor = Color.red;
 	public GameObject FLabel;
 	public GameObject SLabel;
 	public GameObject TLabel;
-	public TileType m_unitType = TileType.Floor;
+	public Vector3 wallScale;
 
+	public TileType m_unitType;
 	private Renderer render;
 	private Color m_defaultColor;
 	private Color m_currentColor;
+
 	private bool m_selected;
 	private int m_xPos;
 	private int m_yPos;
 
+	private bool m_useDiagonals;
+
 	private List<Tile> m_neighbours;
+	private List<Tile> m_DiagN;
+
 
 
 	/*
@@ -36,13 +41,7 @@ public class Tile : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		/*
-		m_F = 0;
-		m_H = 0;
-		m_G = 0;
-		*/
-		//m_neighbours = new List<Tile>();
-
+		m_unitType = TileType.Floor;
 		render = GetComponent<Renderer>();
 		if(!render)
 		{
@@ -51,10 +50,9 @@ public class Tile : MonoBehaviour {
 		else
 		{
 			m_defaultColor = render.material.color;
-			updateColour();
+			updateTile();
 		}
 		showText(false);
-
 	}
 	
 	// Update is called once per frame
@@ -82,25 +80,32 @@ public class Tile : MonoBehaviour {
 		render.material.color = c;
 	}
 
+	public void setUseDiagonals(bool d)
+	{
+		m_useDiagonals = d;
+	}
+
 	//Updates the colour depending on the type
-	void updateColour()
+	void updateTile()
 	{
 		switch(m_unitType)
 		{
 			case TileType.Floor:
 				setColor( m_defaultColor);
 				break;
-			case TileType.Goal:
-				setColor(goalColor);
-				break;
 			case TileType.Wall:
 				setColor(wallColor);
+				this.gameObject.transform.localScale += wallScale;
+				Vector3 newPos = this.gameObject.transform.position;
+				newPos.y += wallScale.y * 0.5f;
+				this.gameObject.transform.position = newPos;
 				break;
 			default:
 				setColor(m_defaultColor);
 				break;
 		}
 		m_currentColor = render.material.color;
+
 		if(m_selected)
 		{
 			setColor(selectionColor);
@@ -110,8 +115,15 @@ public class Tile : MonoBehaviour {
 	//Set the new type
 	public void setType(TileType newType)
 	{
+		if(m_unitType == TileType.Wall)
+		{
+			this.gameObject.transform.localScale -= wallScale;
+			Vector3 newPos = this.gameObject.transform.position;
+			newPos.y -= wallScale.y * 0.5f;
+			this.gameObject.transform.position = newPos;
+		}
 		m_unitType = newType;
-		updateColour();
+		updateTile();
 	}
 	
 	//Set selected
@@ -171,18 +183,40 @@ public class Tile : MonoBehaviour {
 		}
 	}
 
+	public void addDNeighbour(Tile t)
+	{
+		if(m_DiagN == null)
+		{
+			m_DiagN = new List<Tile>();
+		}
+		if(t != null)
+		{
+			m_DiagN.Add(t);
+		}
+	}
+
 	public Tile getNeighbour(int i)
 	{
 		if( i < m_neighbours.Count)
 		{
 			return m_neighbours[i];
 		}
+		else if ( i - m_neighbours.Count < m_DiagN.Count)
+		{
+			return m_DiagN[i - m_neighbours.Count];
+
+		}
 		return null;
 	}
 
 	public int getNeighbourCount()
 	{
-		return m_neighbours.Count;
+		int count = m_neighbours.Count;
+		if(m_useDiagonals)
+		{
+			count += m_DiagN.Count;
+		}
+		return count;
 	}
 
 	public float distance(Tile t)

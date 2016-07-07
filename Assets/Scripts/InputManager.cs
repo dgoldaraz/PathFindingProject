@@ -24,11 +24,16 @@ public class InputManager : MonoBehaviour {
 	private InputManager instance = null;
 	private bool m_isRunning = false;
 
-	public GameObject mainCamera;
-	public Toggle goalToggle;
+	public GameObject mainCameraTranasform;
+
 	public Toggle wallToggle;
 	public Toggle floorToggle;
+	public Toggle DijkstraToggle;
+	public Toggle AStarToggle;
 	public Button runButton;
+
+	private Vector3 m_initCamPos;
+	private Vector3 m_initialCamRot;
 
 
 	//Singleton implmentation
@@ -51,6 +56,8 @@ public class InputManager : MonoBehaviour {
 	{
 		m_selection = new List<GameObject>();
 		deselect();
+		m_initCamPos = mainCameraTranasform.transform.position;
+		m_initialCamRot = mainCameraTranasform.transform.localEulerAngles;
 	}
 	
 	// Update is called once per frame, check if we are running or not
@@ -66,6 +73,23 @@ public class InputManager : MonoBehaviour {
 		else
 		{
 			creationSelection();
+			if(Input.GetKeyDown(KeyCode.O))
+			{
+				Camera cam = mainCameraTranasform.GetComponent<Camera>();
+				if(cam.orthographic)
+				{
+					//change to perspective. Move camera
+					mainCameraTranasform.transform.position = m_initCamPos;
+					mainCameraTranasform.transform.localEulerAngles = m_initialCamRot;
+					cam.orthographic = false;
+				}
+				else
+				{
+					mainCameraTranasform.transform.localEulerAngles = new Vector3(90.0f, 0.0f, 0.0f);
+					mainCameraTranasform.transform.position = new Vector3(0.0f, 5.0f, 2.5f);
+					cam.orthographic = true;
+				}
+			}
 		}
 
 	}
@@ -76,7 +100,7 @@ public class InputManager : MonoBehaviour {
 		if(Input.GetMouseButtonDown(0))
 		{
 			RaycastHit hit;
-			Ray ray = mainCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+			Ray ray = mainCameraTranasform.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
 			if(Physics.Raycast(ray, out hit))
 			{
 				//If there is a hit and is a unit, select it
@@ -132,7 +156,6 @@ public class InputManager : MonoBehaviour {
 		}
 		m_selection.Clear();
 
-		goalToggle.gameObject.SetActive(false);
 		wallToggle.gameObject.SetActive(false);
 		floorToggle.gameObject.SetActive(false);
 	}
@@ -142,7 +165,7 @@ public class InputManager : MonoBehaviour {
 	void selectOneObject()
 	{
 		RaycastHit hit;
-		Ray ray = mainCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+		Ray ray = mainCameraTranasform.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
 		if(Physics.Raycast(ray, out hit))
 		{
 			//If there is a hit and is a unit, select it
@@ -156,15 +179,11 @@ public class InputManager : MonoBehaviour {
 				{
 					m_selection.Add (unitGO);
 					unit.setSelected(true);
-					goalToggle.gameObject.SetActive(true);
 					wallToggle.gameObject.SetActive(true);
 					floorToggle.gameObject.SetActive(true);
 					Tile.TileType type = unit.getType();
 					switch(type)
 					{
-						case Tile.TileType.Goal:
-						goalToggle.isOn = true;
-						break;
 						case Tile.TileType.Wall:
 						wallToggle.isOn = true;
 						break;
@@ -188,14 +207,47 @@ public class InputManager : MonoBehaviour {
 			{
 				setToggleOn(wallToggle, Tile.TileType.Wall);
 			}
-			else if(type == "Goal")
-			{
-				setToggleOn(goalToggle, Tile.TileType.Goal);
-			}
 			else if(type == "Floor")
 			{
 				setToggleOn(floorToggle, Tile.TileType.Floor);
 			}
+		}
+	}
+
+	//Call when the toggle changes depending on type
+	public void toggleAlgorithmChanged(string type)
+	{
+		if(type == "Dijkstra")
+		{
+			if(DijkstraToggle.isOn)
+			{
+				setAlgorithm(PathFinding.pathfindingAlgorithm.Dijkstra);
+			}
+		}
+		else if(type == "AStar")
+		{
+			if(AStarToggle.isOn)
+			{
+				setAlgorithm(PathFinding.pathfindingAlgorithm.Astar);
+			}
+		}
+	}
+
+	public void setDiagonals()
+	{
+		GridCreator gc = GameObject.FindObjectOfType<GridCreator>();
+		if(gc)
+		{
+			gc.setUseDiagonals(!gc.useDiagonals);
+		}
+	}
+
+	void setAlgorithm(PathFinding.pathfindingAlgorithm type)
+	{
+		PathFinding pf = GameObject.FindObjectOfType<PathFinding>();
+		if(pf)
+		{
+			pf.setAlgorithm(type);
 		}
 	}
 
@@ -246,7 +298,7 @@ public class InputManager : MonoBehaviour {
 	void checkMoveUnit()
 	{
 		RaycastHit hit;
-		Ray ray = mainCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+		Ray ray = mainCameraTranasform.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
 		if(Physics.Raycast(ray, out hit))
 		{
 			//If there is a hit and is a unit, select it

@@ -17,7 +17,7 @@ public class PathFinding : MonoBehaviour {
 		//change path when the target is set
 		InputManager.onSetTarget += calculatePath;
 	}
-
+	// Calculate the next path depending on the algorithm choosen
 	void calculatePath(int targetX, int targetY)
 	{
 		switch( m_algorithm)
@@ -30,7 +30,12 @@ public class PathFinding : MonoBehaviour {
 			break;
 		}
 	}
-
+	//set the algorithm type
+	public void setAlgorithm(pathfindingAlgorithm type)
+	{
+		m_algorithm = type;
+	}
+	//Use Dijkstra algorithm to calculate path
 	void calculateDijkstra(int targetX, int targetY)
 	{
 		Debug.Log( "Dijkstra! target: " + targetX + "," + targetY);
@@ -94,7 +99,7 @@ public class PathFinding : MonoBehaviour {
 		}
 
 	}
-
+	//Calculate path user A*
 	void calculateAStar(int targetX, int targetY)
 	{
 		Debug.Log( "A* target: " + targetX + "," + targetY);
