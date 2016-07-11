@@ -6,8 +6,7 @@ public class GridCreator : MonoBehaviour {
 
 	//This class creates a grid of WxH objects starting form it's position and using the distance given by the objects
 	//Not only creates the objects but stores it.
-
-
+	
 	public int H = 10;
 	public int W = 10;
 	public GameObject tile;

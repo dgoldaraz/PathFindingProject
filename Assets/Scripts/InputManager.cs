@@ -35,6 +35,7 @@ public class InputManager : MonoBehaviour {
 	private Vector3 m_initCamPos;
 	private Vector3 m_initialCamRot;
 
+	private GameObject m_mouseOverTile;
 
 	//Singleton implmentation
 	void Awake () {
@@ -58,6 +59,7 @@ public class InputManager : MonoBehaviour {
 		deselect();
 		m_initCamPos = mainCameraTranasform.transform.position;
 		m_initialCamRot = mainCameraTranasform.transform.localEulerAngles;
+		m_mouseOverTile = null;
 	}
 	
 	// Update is called once per frame, check if we are running or not
@@ -75,25 +77,30 @@ public class InputManager : MonoBehaviour {
 			creationSelection();
 			if(Input.GetKeyDown(KeyCode.O))
 			{
-				Camera cam = mainCameraTranasform.GetComponent<Camera>();
-				if(cam.orthographic)
-				{
-					//change to perspective. Move camera
-					mainCameraTranasform.transform.position = m_initCamPos;
-					mainCameraTranasform.transform.localEulerAngles = m_initialCamRot;
-					cam.orthographic = false;
-				}
-				else
-				{
-					mainCameraTranasform.transform.localEulerAngles = new Vector3(90.0f, 0.0f, 0.0f);
-					mainCameraTranasform.transform.position = new Vector3(0.0f, 5.0f, 2.5f);
-					cam.orthographic = true;
-				}
+				changeCamera();
 			}
 		}
 
 	}
 
+	void changeCamera()
+	{
+		Camera cam = mainCameraTranasform.GetComponent<Camera>();
+		if(cam.orthographic)
+		{
+			//change to perspective. Move camera
+			mainCameraTranasform.transform.position = m_initCamPos;
+			mainCameraTranasform.transform.localEulerAngles = m_initialCamRot;
+			cam.orthographic = false;
+		}
+		else
+		{
+			mainCameraTranasform.transform.localEulerAngles = new Vector3(90.0f, 0.0f, 0.0f);
+			mainCameraTranasform.transform.position = new Vector3(0.0f, 5.0f, 2.5f);
+			cam.orthographic = true;
+		}
+	}
+	
 	//Calculates the target position and send a signal
 	void selectTarget()
 	{
@@ -123,19 +130,34 @@ public class InputManager : MonoBehaviour {
 		if(Input.GetMouseButtonDown(0))
 		{
 			//MultiSelect
-			//TODO Allow multiselection
-			//if(!Input.GetKeyDown(KeyCode.AltGr))
-			//{
-			//Only one selection
-			//deselect ();
-			//}
-			selectOneObject();
+			if(Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+			{
+				//Only one selection
+				selectObject(false);
+			}
+			else
+			{
+				selectObject(true);
+			}
+
 		}
 		else if(Input.GetMouseButtonDown(1))
 		{
 			//Deselct on right button if we don't hit any object
 			checkMoveUnit();
 			deselect();
+		}
+		else
+		{
+			RaycastHit hit;
+			Ray ray = mainCameraTranasform.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+			if(Physics.Raycast(ray, out hit))
+			{
+				if(hit.collider.CompareTag("Tile") && hit.collider.gameObject != m_mouseOverTile)
+				{
+					setMouseOver(hit.collider.gameObject);
+				}
+			}
 		}
 		
 		if(Input.GetKeyDown(KeyCode.D))
@@ -162,7 +184,7 @@ public class InputManager : MonoBehaviour {
 
 	//Select an Tile (and deselct if there is another)
 	//Updates the Toggles with the types of the Tile selected (if any)
-	void selectOneObject()
+	void selectObject(bool onlyOne)
 	{
 		RaycastHit hit;
 		Ray ray = mainCameraTranasform.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
@@ -172,7 +194,10 @@ public class InputManager : MonoBehaviour {
 			if(hit.collider.CompareTag("Tile"))
 			{
 				//Deselect current object
-				deselect ();
+				if(onlyOne)
+				{
+					deselect ();
+				}
 				GameObject unitGO = hit.collider.gameObject;
 				Tile unit = unitGO.GetComponent<Tile>();
 				if(unit)
@@ -194,6 +219,7 @@ public class InputManager : MonoBehaviour {
 						break;
 					}
 				}
+				m_mouseOverTile = null;
 			}
 		}
 	}
@@ -267,7 +293,7 @@ public class InputManager : MonoBehaviour {
 	}
 
 	//Deals with the Run button simulation
-	public void buttonPressed()
+	public void runButtonPressed()
 	{
 		//Get text to know the state
 		if(runButton.GetComponentInChildren<Text>().text == "RUN")
@@ -294,6 +320,11 @@ public class InputManager : MonoBehaviour {
 		}
 	}
 
+	public void cameraButtonPressed()
+	{
+		changeCamera();
+	}
+
 	//Checks the user wants to move the Unit to a specific position
 	void checkMoveUnit()
 	{
@@ -314,6 +345,18 @@ public class InputManager : MonoBehaviour {
 				}
 			}
 		}
+	}
+
+	public void setMouseOver(GameObject gg)
+	{
+
+		if(m_mouseOverTile)
+		{
+			m_mouseOverTile.GetComponent<Tile>().setNormalColour();
+		}
+
+		m_mouseOverTile = gg;
+		m_mouseOverTile.GetComponent<Tile>().setOverColour();
 	}
 	
 }

@@ -54,26 +54,24 @@ public class Tile : MonoBehaviour {
 		}
 		showText(false);
 	}
-	
-	// Update is called once per frame
-	void Update () 
+
+	public void setNormalColour()
 	{
-		//Do a raycast with the collider and the camera position to decide the clour
 		if(!m_selected)
 		{
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hitInfo;
-			if(collider.Raycast(ray,out hitInfo,Mathf.Infinity))
-			{
-				render.material.color = overColour;
-			}
-			else
-			{
-				render.material.color = m_currentColor;
-			}
+			render.material.color = m_currentColor;
+		}
+		else
+		{
+			render.material.color = selectionColor;
 		}
 	}
 
+	public void setOverColour()
+	{
+		render.material.color = overColour;
+	}
+	
 	//Set Colr function
 	public void setColor( Color c )
 	{
